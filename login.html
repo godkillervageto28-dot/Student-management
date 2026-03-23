@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Student Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        @media(max-width: 700px) { body { grid-template-columns: 1fr; } .login-panel-left { display: none; } }
+
+        /* LEFT PANEL */
+        .login-panel-left {
+            background: var(--primary);
+            padding: 3rem;
+            display: flex; flex-direction: column; justify-content: space-between;
+            position: relative; overflow: hidden;
+            border-right: var(--border-ultra);
+        }
+        .lpl-stripe {
+            position: absolute; top: 0; left: 0; right: 0; height: 8px;
+            background: repeating-linear-gradient(90deg, var(--accent) 0, var(--accent) 30px, var(--accent3) 30px, var(--accent3) 60px, var(--accent2) 60px, var(--accent2) 90px);
+        }
+        .lpl-logo { font-family: var(--font-display); font-size: 1.3rem; color: white; letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+        .lpl-logo-dot { width: 10px; height: 10px; background: var(--accent); border: 2px solid white; }
+        .lpl-center { }
+        .lpl-big { font-family: var(--font-display); font-size: clamp(3rem, 6vw, 5rem); color: white; line-height: 0.95; letter-spacing: 2px; text-transform: uppercase; }
+        .lpl-big .outline { -webkit-text-stroke: 2px white; color: transparent; }
+        .lpl-big .red { color: var(--accent); }
+        .lpl-desc { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-top: 1.5rem; line-height: 1.8; }
+        .lpl-roles { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 2rem; }
+        .lpl-role {
+            display: flex; align-items: center; gap: 0.8rem;
+            border: 2px solid rgba(255,255,255,0.15); padding: 0.7rem 1rem;
+            font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 2px;
+            text-transform: uppercase; color: rgba(255,255,255,0.6);
+        }
+        .lpl-role-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dot-admin { background: var(--accent); }
+        .dot-faculty { background: var(--accent2); }
+        .dot-student { background: var(--accent3); }
+        .lpl-bottom { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.2); }
+        .lpl-watermark {
+            position: absolute; bottom: -2rem; right: -2rem;
+            font-family: var(--font-display); font-size: 12rem;
+            color: rgba(255,255,255,0.04); pointer-events: none; user-select: none; line-height: 1;
+        }
+
+        /* RIGHT PANEL */
+        .login-panel-right {
+            background: var(--bg);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 3rem 2.5rem;
+            position: relative;
+        }
+        .login-panel-right::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.05) 39px, rgba(0,0,0,0.05) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.05) 39px, rgba(0,0,0,0.05) 40px);
+            pointer-events: none;
+        }
+        .login-card {
+            width: 100%; max-width: 400px;
+            background: white; border: var(--border-ultra);
+            box-shadow: var(--shadow-lg); overflow: hidden;
+            animation: smash 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+            position: relative; z-index: 1;
+        }
+        .login-card-header {
+            background: var(--primary); padding: 1.8rem 2rem;
+            border-bottom: var(--border-ultra);
+        }
+        .login-card-eyebrow { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent3); margin-bottom: 0.3rem; }
+        .login-card-title { font-family: var(--font-display); font-size: 1.8rem; color: white; letter-spacing: 1px; text-transform: uppercase; }
+        .login-card-body { padding: 2rem; }
+
+        /* Error message */
+        .login-error {
+            background: #fff0f0; border: 3px solid var(--accent);
+            padding: 0.75rem 1rem; margin-bottom: 1rem;
+            font-family: var(--font-mono); font-size: 0.75rem;
+            letter-spacing: 1px; color: var(--accent); display: none;
+        }
+        .login-error.visible { display: block; animation: shake 0.3s both; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+        /* Login button states */
+        #login-btn { width: 100%; font-size: 1.1rem; position: relative; overflow: hidden; }
+        #login-btn.loading { opacity: 0.7; pointer-events: none; }
+        #login-btn.loading::after {
+            content: '';
+            position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 0.8s infinite;
+        }
+        @keyframes shimmer { to { left: 100%; } }
+
+        /* Success overlay */
+        .login-success-overlay {
+            position: fixed; inset: 0; background: var(--accent3);
+            z-index: 999; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            border: var(--border-ultra);
+        }
+        .login-success-overlay.visible { display: flex; animation: flashIn 0.3s both; }
+        @keyframes flashIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .success-icon { font-size: 5rem; margin-bottom: 1rem; }
+        .success-text { font-family: var(--font-display); font-size: 3rem; letter-spacing: 3px; text-transform: uppercase; color: var(--text); }
+        .success-sub { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; color: rgba(0,0,0,0.5); margin-top: 0.5rem; }
+
+        .login-hint {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin-top: 1.2rem; background: var(--bg); border: var(--border-thick);
+            padding: 0.75rem 1rem; font-family: var(--font-mono); font-size: 0.72rem;
+            letter-spacing: 1px; color: #555;
+        }
+        .login-hint strong { color: var(--accent); }
+
+        .back-link {
+            margin-top: 1.5rem; text-align: center;
+            font-family: var(--font-mono); font-size: 0.72rem;
+            letter-spacing: 2px; text-transform: uppercase;
+            position: relative; z-index: 1;
+        }
+        .back-link a { color: #888; text-decoration: none; border-bottom: 2px solid #ccc; padding-bottom: 1px; }
+        .back-link a:hover { color: var(--text); border-color: var(--text); }
+    </style>
+</head>
+<body>
+
+    <!-- SUCCESS OVERLAY -->
+    <div class="login-success-overlay" id="success-overlay">
+        <div class="success-icon">✓</div>
+        <div class="success-text">Access Granted</div>
+        <div class="success-sub" id="success-role-text">Redirecting...</div>
+    </div>
+
+    <!-- LEFT PANEL -->
+    <div class="login-panel-left">
+        <div class="lpl-stripe"></div>
+        <a href="index.html" class="lpl-logo"><span class="lpl-logo-dot"></span> SMS</a>
+        <div class="lpl-center">
+            <div class="lpl-big">
+                Secure<br>
+                <span class="outline">Portal</span><br>
+                <span class="red">Access</span>
+            </div>
+            <p class="lpl-desc">Vels University<br>Student Management System<br>Academic Year 2024–25</p>
+            <div class="lpl-roles">
+                <div class="lpl-role"><span class="lpl-role-dot dot-admin"></span>Admin — Full Control</div>
+                <div class="lpl-role"><span class="lpl-role-dot dot-faculty"></span>Faculty — Grade Management</div>
+                <div class="lpl-role"><span class="lpl-role-dot dot-student"></span>Student — Profile View</div>
+            </div>
+        </div>
+        <div class="lpl-bottom">Frontend Only · localStorage · No Backend</div>
+        <div class="lpl-watermark">IN</div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="login-panel-right">
+        <div class="login-card">
+            <div class="login-card-header">
+                <div class="login-card-eyebrow">Vels University Portal</div>
+                <div class="login-card-title">Sign In</div>
+            </div>
+            <div class="login-card-body">
+                <div class="login-error" id="login-error">⚠ Invalid username or password.</div>
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="login-username" required autocomplete="username" placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••">
+                    </div>
+                    <button type="submit" id="login-btn">→ Login</button>
+                </form>
+                <div class="login-hint"><strong>Admin:</strong>&nbsp;admin / admin123</div>
+            </div>
+        </div>
+        <div class="back-link"><a href="index.html">← Back to Home</a></div>
+    </div>
+
+    <script>
+        function initDB() {
+            if (!localStorage.getItem('sysDB')) {
+                localStorage.setItem('sysDB', JSON.stringify({
+                    users: [{ username: 'admin', password: 'admin123', name: 'System Admin', role: 'admin' }],
+                    studentData: {}
+                }));
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const un = document.getElementById('login-username').value.trim();
+            const pw = document.getElementById('login-password').value;
+            const db = JSON.parse(localStorage.getItem('sysDB'));
+            const user = db.users.find(u => u.username === un && u.password === pw);
+
+            const btn = document.getElementById('login-btn');
+            const errEl = document.getElementById('login-error');
+
+            if (user) {
+                errEl.classList.remove('visible');
+                btn.classList.add('loading');
+                btn.textContent = 'Verifying...';
+
+                // Store session
+                sessionStorage.setItem('currentUser', JSON.stringify(user));
+
+                // Show success overlay
+                setTimeout(() => {
+                    const overlay = document.getElementById('success-overlay');
+                    document.getElementById('success-role-text').textContent = `Entering ${user.role.toUpperCase()} dashboard...`;
+                    overlay.classList.add('visible');
+                }, 500);
+
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1400);
+            } else {
+                errEl.classList.remove('visible');
+                void errEl.offsetWidth; // reflow to re-trigger animation
+                errEl.classList.add('visible');
+                btn.textContent = '→ Login';
+                document.getElementById('login-password').value = '';
+                document.getElementById('login-password').focus();
+            }
+        }
+
+        initDB();
+    </script>
+</body>
+</html>

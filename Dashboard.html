@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Student Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Dashboard top nav */
+        .dash-nav {
+            background: var(--primary); border-bottom: var(--border-ultra);
+            box-shadow: 0 6px 0 #0d0d0d;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; height: 70px; position: sticky; top: 0; z-index: 50;
+        }
+        .dash-nav-left { display: flex; align-items: center; gap: 1.5rem; }
+        .dash-nav-logo { font-family: var(--font-display); font-size: 1.3rem; color: white; letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+        .dash-nav-logo .dot { width: 10px; height: 10px; background: var(--accent); border: 2px solid white; }
+        .dash-nav-divider { width: 2px; height: 30px; background: rgba(255,255,255,0.2); }
+        .dash-nav-user { }
+        .dash-nav-name { font-family: var(--font-display); font-size: 1rem; color: white; letter-spacing: 1px; text-transform: uppercase; }
+        .dash-nav-role { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent3); }
+        .dash-nav-stripe {
+            position: absolute; top: 0; left: 0; right: 0; height: 5px;
+            background: repeating-linear-gradient(90deg, var(--accent) 0, var(--accent) 20px, var(--accent3) 20px, var(--accent3) 40px, var(--accent2) 40px, var(--accent2) 60px);
+        }
+    </style>
+</head>
+<body>
+
+    <button id="evaluator-btn" onclick="toggleModal(true)">📖 How to Use</button>
+
+    <div id="evaluator-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-content-header"><h2>Evaluator Flow Guide</h2></div>
+            <div class="modal-body">
+                <ol>
+                    <li><strong>Admin Login:</strong> Use Username: <code>admin</code> &amp; Password: <code>admin123</code>.</li>
+                    <li><strong>Add Users (Admin):</strong> Create a Faculty and a Student account. Log out.</li>
+                    <li><strong>Faculty Login:</strong> Log in using Faculty credentials.</li>
+                    <li><strong>Update Profile (Faculty):</strong> Add attendance and subject marks. Click "Update". Log out.</li>
+                    <li><strong>Student Login:</strong> Log in using Student credentials.</li>
+                    <li><strong>View Profile (Student):</strong> See the attendance and marks updated by the faculty.</li>
+                </ol>
+            </div>
+            <div class="modal-footer"><button onclick="toggleModal(false)">Got it!</button></div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD NAV -->
+    <nav class="dash-nav">
+        <div class="dash-nav-stripe"></div>
+        <div class="dash-nav-left">
+            <a href="index.html" class="dash-nav-logo"><span class="dot"></span>SMS</a>
+            <div class="dash-nav-divider"></div>
+            <div class="dash-nav-user">
+                <div class="dash-nav-name" id="nav-user-name">—</div>
+                <div class="dash-nav-role" id="nav-user-role">—</div>
+            </div>
+        </div>
+        <button class="danger" onclick="logout()" style="font-size:0.85rem;padding:0.5rem 1.2rem;">⏏ Logout</button>
+    </nav>
+
+    <div class="container">
+
+        <!-- ===== ADMIN VIEW ===== -->
+        <div id="view-admin" class="hidden">
+            <div class="page-banner">
+                <div><div class="page-banner-title">Admin Dashboard</div><div class="page-banner-sub">User Management</div></div>
+                <span class="badge badge-admin">Admin</span>
+            </div>
+            <div class="panel">
+                <h3>Create New User</h3>
+                <form id="add-user-form" onsubmit="handleAddUser(event)">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select id="new-role">
+                                <option value="faculty">Faculty</option>
+                                <option value="student">Student</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="new-name" required placeholder="Full name">
+                        </div>
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="new-username" required placeholder="username">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="text" id="new-password" required placeholder="password">
+                        </div>
+                    </div>
+                    <button type="submit">+ Create User</button>
+                </form>
+            </div>
+            <div class="panel mt-2">
+                <h3>System Users</h3>
+                <table>
+                    <thead><tr><th>Name</th><th>Username</th><th>Role</th></tr></thead>
+                    <tbody id="admin-users-table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== FACULTY VIEW ===== -->
+        <div id="view-faculty" class="hidden">
+            <div class="page-banner">
+                <div><div class="page-banner-title">Faculty Panel</div><div class="page-banner-sub">Student Profiles &amp; Grades</div></div>
+                <span class="badge badge-faculty">Faculty</span>
+            </div>
+            <div id="faculty-students-list"></div>
+        </div>
+
+        <!-- ===== STUDENT VIEW ===== -->
+        <div id="view-student" class="hidden">
+            <div class="page-banner">
+                <div><div class="page-banner-title">My Profile</div><div class="page-banner-sub">Academic Performance</div></div>
+                <span class="badge badge-student">Student</span>
+            </div>
+            <div class="panel">
+                <h3>Academic Overview</h3>
+                <div id="student-stats"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        // On page load — check session
+        window.addEventListener('DOMContentLoaded', () => {
+            const stored = sessionStorage.getItem('currentUser');
+            if (!stored) {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = JSON.parse(stored);
+            document.getElementById('nav-user-name').textContent = currentUser.name;
+            document.getElementById('nav-user-role').textContent = currentUser.role.toUpperCase();
+            routeUser();
+        });
+    </script>
+</body>
+</html>
